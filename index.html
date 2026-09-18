@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>¿Quieres ser mi novia?</title>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+
+    html, body {
+      width: 100%;
+      height: 100%;
+      overflow: hidden;
+      font-family: "Segoe UI", "Microsoft YaHei", Arial, sans-serif;
+    }
+
+    #pregunta, #respuesta {
+      position: fixed;
+      inset: 0;
+      background-size: cover;
+      background-position: center;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      justify-content: center;
+      user-select: none;
+    }
+
+    #pregunta { background-image: url("img/FondoPregunta.jpg"); }
+    #respuesta  { background-image: url("img/FondoRespuesta.jpg"); display: none; }
+
+    #cardPregunta, #cardRespuesta {
+      background: rgba(255, 255, 255, 0.85);
+      border-radius: 20px;
+      padding: 40px 30px;
+      text-align: center;
+      box-shadow: 0 10px 30px rgba(0, 0, 0, 0.3);
+      max-width: 90vw;
+    }
+
+    #cardPregunta { width: 480px; }
+    #cardRespuesta { width: 560px; }
+
+    h1 {
+      font-size: 2.6rem;
+      color: #e91e63;
+      margin-bottom: 35px;
+      text-shadow: 2px 2px 4px rgba(255,255,255,0.8);
+    }
+
+    .botones { display: flex; gap: 70px; justify-content: center; position: relative; }
+
+    button.si, button.no {
+      font-size: 1.5rem;
+      font-weight: 700;
+      border: none;
+      border-radius: 12px;
+      padding: 15px 35px;
+      cursor: pointer;
+      color: #fff;
+      transition: transform 0.15s ease, box-shadow 0.15s ease;
+    }
+
+    button.si { background: #4caf50; box-shadow: 0 5px 0 #388e3c; }
+    button.si:active { transform: translateY(4px); box-shadow: 0 1px 0 #388e3c; }
+    button.no { background: #f44336; box-shadow: 0 5px 0 #c62828; }
+
+    button.no.fugitivo {
+      position: fixed;
+      z-index: 999;
+    }
+
+    #respuesta h2 {
+      font-size: 2.2rem;
+      color: #ad1457;
+      margin-bottom: 30px;
+    }
+
+    #respuesta img {
+      width: 130px;
+      height: auto;
+      cursor: pointer;
+      transition: transform 0.2s ease;
+    }
+    #respuesta img:hover { transform: scale(1.15); }
+
+    #respuesta p.textoAyuda {
+      margin-top: 10px;
+      color: #880e4f;
+      font-size: 1rem;
+      font-weight: 600;
+    }
+
+    #toast {
+      position: fixed;
+      bottom: 30px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(0,0,0,0.75);
+      color: #fff;
+      padding: 12px 24px;
+      border-radius: 30px;
+      font-size: 1rem;
+      opacity: 0;
+      pointer-events: none;
+      transition: opacity 0.4s ease;
+      z-index: 1000;
+    }
+    #toast.visible { opacity: 1; }
+  </style>
+</head>
+<body>
+  <div id="pregunta">
+    <div id="cardPregunta">
+      <h1>¿Quieres ser mi novia?</h1>
+      <div class="botones">
+        <button class="si" id="btnSi">SÍ</button>
+        <button class="no" id="btnNo">NO</button>
+      </div>
+    </div>
+  </div>
+
+  <div id="respuesta">
+    <div id="cardRespuesta">
+      <h2>Siempre supe que te gustaba :3</h2>
+      <img id="corazon" src="img/pngocean.com.png" alt="Corazón" title="Toca el corazón" />
+      <p class="textoAyuda">Toca el corazón</p>
+    </div>
+  </div>
+
+  <div id="toast"></div>
+
+  <script>
+    const btnNo = document.getElementById('btnNo');
+    const btnSi = document.getElementById('btnSi');
+    const corazon = document.getElementById('corazon');
+    const preg = document.getElementById('pregunta');
+    const resp = document.getElementById('respuesta');
+    const toast = document.getElementById('toast');
+
+    function seSolapan(el1, el2) {
+      const a = el1.getBoundingClientRect();
+      const b = el2.getBoundingClientRect();
+      return !(a.right < b.left || a.left > b.right || a.bottom < b.top || a.top > b.bottom);
+    }
+
+    function moverBotonNo() {
+      const r = btnNo.getBoundingClientRect();
+      const vw = window.innerWidth;
+      const vh = window.innerHeight;
+
+      btnNo.classList.add('fugitivo');
+
+      let x, y, intentos = 0;
+      do {
+        x = Math.random() * (vw - r.width);
+        y = Math.random() * (vh - r.height);
+        btnNo.style.left = x + 'px';
+        btnNo.style.top = y + 'px';
+        intentos++;
+      } while (seSolapan(btnNo, btnSi) && intentos < 40 &&
+               x < vw - r.width && y < vh - r.height);
+    }
+
+    function intentoDeHuir(e) {
+      const cursorX = e.clientX;
+      const cursorY = e.clientY;
+      const r = btnNo.getBoundingClientRect();
+      const cx = r.left + r.width / 2;
+      const cy = r.top + r.height / 2;
+      if (Math.hypot(cursorX - cx, cursorY - cy) < 150) moverBotonNo();
+    }
+
+    document.addEventListener('mousemove', intentoDeHuir);
+    btnNo.addEventListener('mousemove', moverBotonNo);
+    btnNo.addEventListener('touchstart', function (e) { e.preventDefault(); moverBotonNo(); }, { passive: false });
+
+    btnSi.addEventListener('click', function () {
+      preg.style.display = 'none';
+      resp.style.display = 'flex';
+    });
+
+    function mostrarToast(texto) {
+      toast.textContent = texto;
+      toast.classList.add('visible');
+      setTimeout(() => toast.classList.remove('visible'), 2500);
+    }
+
+    corazon.addEventListener('click', function () {
+      resp.style.display = 'none';
+      preg.style.display = 'flex';
+      btnNo.classList.remove('fugitivo');
+      btnNo.style.left = ''; btnNo.style.top = '';
+      mostrarToast('¡Esa fue la respuesta correcta! :3');
+    });
+  </script>
+</body>
+</html>
